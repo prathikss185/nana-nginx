@@ -1,0 +1,32 @@
+# Main context (global configuration)
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    include mime.types;
+
+    # Upstream block to define the Node.js backend servers
+    upstream nodejs_cluster {
+        server 127.0.0.1:3001;
+        server 127.0.0.1:3002;
+        server 127.0.0.1:3003;
+    }
+
+    # Server block for HTTP (port 80)
+    server {
+        listen 8080;  # Listen on port 80 for HTTP
+        server_name 3.88.203.138;  # Replace with your EC2 public IP or domain name
+
+        # Proxying requests to Node.js cluster
+        location / {
+            proxy_pass http://nodejs_cluster;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+}
